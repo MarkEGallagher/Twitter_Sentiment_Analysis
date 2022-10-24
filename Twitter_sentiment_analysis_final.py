@@ -63,14 +63,26 @@ def collection():
         for item in name:
             col1 = item.get_text()
             col1 = col1.strip()
-            col1 = col1.split("@")
-            col1v2 = col1[1].split("·")
-            col1v3 = col1v2[1]
+            if col1.find("&", 0, len(col1)) == -1:
+                col1 = col1.split("@")
+                col1v2 = col1[1].split("·")
+                col1v3 = col1v2[1]
+                handle_data.append("@" + col1v2[0])
+            else:
+                col1v2 = col1.split("·")
+                print(col1v2)
+                col1 = col1v2[0].split("@", 1)
+                col1v2 = col1v2[0].replace("@", "")
+                print(col1)
+                col1v3 = col1v2[1]
+                handle_data.append("@" + col1[1])
             if ' ' not in col1v3:
                 col1v3 = date.today()
                 col1v3 = col1v3.strftime('%B %d')
-            handle_data.append("@" + col1v2[0])
-            name_data.append(col1[0])
+            if col1[0] != "":
+                name_data.append(col1[0])
+            else:
+                name_data.append("Emojis")
             date_data.append(col1v3)
         for item in text:
             col2 = item.get_text()
@@ -83,20 +95,16 @@ def collection():
 #Collecting the data
 collection()
 scroll(10)
-time.sleep(3)
 collection()
 scroll(20)
-time.sleep(3)
 collection()
 scroll(30)
-time.sleep(3)
 collection()
 scroll(40)
-time.sleep(3)
 collection()
 scroll(50)
-time.sleep(3)
 collection()
+time.sleep(3)
 
 #Removing any duplicate list items
 text_data = list(set(text_data))
@@ -107,6 +115,10 @@ sixers_data = pd.DataFrame({'Name':name_data, 'Handle':handle_data, 'Date_Tweete
 #Defining new lists for future data wrangling
 compound_sentiment = []
 sentiment_classification = []
+player_categorization = []
+
+#Defining the list of Philadelphia 76ers Players
+sixers_players = ["Embiid", "Harden", "Maxey", "Harris", "Harrell", "Melton", "Springer", "Tucker", "Milton", "Niang", "Thybulle", "House", "Korkmaz", "Foster", "Reed", "Champagnie", "Rivers"]
 
 #Setting up sentiment analyzer
 def sentiment_score(tweet):
@@ -120,13 +132,28 @@ def sentiment_score(tweet):
     else :
         sentiment_classification.append(("Neutral"))
 
-#Analyzing the sentiment of each tweet
+def categorization(tweet):
+    y = 0
+    for x in sixers_players:
+        if tweet.find(x, 0, len(tweet))!= -1:
+            player_categorization.append(x)
+            break
+        else:
+            y+=1
+            continue
+    if y == len(sixers_players):
+        player_categorization.append("No Categorization")
+
+#Analyzing the sentiment of each tweet and adding a player categorization
 for tweet in sixers_data['Tweet']:
     sentiment_score(tweet)
+    categorization(tweet)
+
 
 #Adding sentiment data to the main dataframe
 sixers_data['Sentiment_Score'] = compound_sentiment
 sixers_data['Sentiment_Classification'] = sentiment_classification
+sixers_data['Player_Categorization'] = player_categorization
 
 #Printing the overall sentiment result
 if sum(sixers_data['Sentiment_Score'])/len(sixers_data['Sentiment_Score']) >= 0.05:
